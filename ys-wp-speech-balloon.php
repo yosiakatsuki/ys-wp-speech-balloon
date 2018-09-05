@@ -26,6 +26,7 @@ function yswpsb_speech_balloon( $atts, $content = '' ) {
 			'alt'   => '',
 			'type'  => 'r',
 			'name'  => '',
+			'class' => '',
 		),
 		$atts
 	);
@@ -41,22 +42,86 @@ function yswpsb_speech_balloon( $atts, $content = '' ) {
 	/**
 	 * 変数準備
 	 */
-	$image      = $atts['image'];
-	$type_class = 'yswpsb-type-' . $atts['type'];
-	$name       = $atts['name'];
-	$alt        = $atts['alt'];
-	$template   = apply_filters( 'yswpsb_speech_balloon_template', plugin_dir_path( __FILE__ ) . 'template/template.php' );
+	$image = esc_url_raw( $atts['image'] );
+	$type  = esc_attr( $atts['type'] );
+	$name  = esc_html( $atts['name'] );
+	$alt   = esc_attr( $atts['alt'] );
+	$class = esc_attr( $atts['class'] );
+	/**
+	 * HTML作成
+	 */
+	$html = yswpsb_get_speech_balloon_html( $image, $type, $name, $alt, $content, $class );
+	/**
+	 * スタイルシート読み込み
+	 */
 	$stylesheet = yswpsb_get_stylesheet_url();
 	if ( $stylesheet ) {
 		wp_enqueue_style( 'yswp-speech-balloon', $stylesheet );
 	}
-	ob_start();
-	include $template;
 
-	return ob_get_clean();
+	return $html;
 }
 
 add_shortcode( 'yswp_speech_balloon', 'yswpsb_speech_balloon' );
+
+/**
+ * 吹き出しHTML作成
+ *
+ * @param string $image   画像URL.
+ * @param string $type    "r" または "l".
+ * @param string $name    画像下に表示する名前.
+ * @param string $alt     画像のalt.(default:"")
+ * @param string $content 吹き出しのテキスト.
+ * @param string $class   追加するクラス.
+ *
+ * @return string
+ */
+function yswpsb_get_speech_balloon_html( $image, $type, $name, $alt, $content, $class = '' ) {
+	/**
+	 * 名前部分の作成
+	 */
+	if ( $name ) {
+		$name = '<div class="yswpsb-name">' . $name . '</div>';
+	}
+	/**
+	 * クラスの加工
+	 */
+	if ( ! empty( $class ) ) {
+		$class = ' ' . $class;
+	}
+	/**
+	 * 本文加工
+	 */
+	$content = yswpsb_get_content( $content );
+	/**
+	 * HTML作成
+	 */
+	$html = <<<EOD
+<div class="yswpsb-container yswpsb-type-${type}${class}">
+    <div class="yswpsb-icon">
+        <figure class="yswpsb-image">
+            <img src="${image}" alt="${alt}">
+        </figure>
+        ${name}
+    </div>
+    <div class="yswpsb-content">
+        <div class="yswpsb-balloon">${content}</div>
+    </div>
+</div>
+EOD;
+
+	return apply_filters(
+		'yswpsb_get_speech_balloon_html',
+		$html,
+		$image,
+		$type,
+		$name,
+		$alt,
+		$content,
+		$class
+	);
+}
+
 
 /**
  * プラグインのCSSファイルURLを取得
@@ -67,4 +132,23 @@ function yswpsb_get_stylesheet_url() {
 	$url = plugin_dir_url( __FILE__ ) . 'css/ys-wp-speech-balloon.css';
 
 	return apply_filters( 'yswpsb_get_stylesheet_url', $url );
+}
+
+
+/**
+ * 吹き出し内のコメント加工
+ *
+ * @param string $content content.
+ *
+ * @return string
+ */
+function yswpsb_get_content( $content ) {
+	$content = wp_filter_post_kses( $content );
+	if ( has_filter( 'the_content', 'wpautop' ) ) {
+		$content = wpautop( $content );
+	} else {
+		$content = nl2br( $content );
+	}
+
+	return apply_filters( 'yswpsb_get_content', $content );
 }
