@@ -24,10 +24,14 @@
 }
 .yswpsb-icon {
     max-width: 50px;
+    height: auto;
 }
 .yswpsb-image {
     border-radius: 50%;
     overflow: hidden;
+}
+.yswpsb-image img {
+    vertical-align: middle;
 }
 .yswpsb-name {
     margin-top: .3em;
