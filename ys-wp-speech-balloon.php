@@ -6,7 +6,7 @@
  * Author URI:      https://yosiakatsuki.net
  * Text Domain:     ys-wp-speech-balloon
  * Domain Path:     /languages
- * Version:         0.0.1
+ * Version:         0.0.2
  *
  * @package         WP_Speech_Balloon
  */
